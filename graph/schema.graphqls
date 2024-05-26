@@ -1,0 +1,65 @@
+
+type Post  {
+	id:         ID!
+	author:     String!
+	title:      String!
+	text:       String!
+	time: 	Time!
+	isCommentable: Boolean
+}
+
+type Comment {
+	id: ID!
+	author:     String!
+	text:     String!
+	time: 	Time!
+	childs:  [Comment!]
+}
+
+type CommentsResult {
+	comments: [Comment!]
+	pageInfo: PageInfo!
+}
+
+type ShortPost {
+	id: ID!
+	author: String!
+	title: String!
+}
+
+type PageInfo {
+    startCursor: ID!
+    endCursor: ID!
+    hasNextPage: Boolean!
+}
+
+input NewPost {
+    author:     String!
+	title:      String!
+	text:       String!
+	time: 	Time!
+	isCommentable: Boolean
+}
+
+input NewComment {
+	author:     String!
+	text:     String!
+	time: 	Time!
+}
+
+type Mutation {
+    createPost(input: NewPost!): Post!
+    createComment(post: ID!, parentComment: ID! comment: NewComment!): Comment!
+}
+
+type Query {
+  posts(count: Int, after: ID): [ShortPost!]
+	post(id: ID!): Post!
+	comments(postId: ID!, count: Int, after: ID): CommentsResult!
+}
+
+type Subscription {
+    commentAdded(postId: ID!): Comment!
+}
+
+scalar Time

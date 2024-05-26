@@ -1,0 +1,2 @@
+DELETE FROM Post;
+DELETE FROM Comment;

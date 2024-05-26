@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: commentsdb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5  
+  cars:
+    build: .
+    ports:
+      - "9000:9000"
+    environment:
+      - DB_HOST=postgresql://postgres:password@database:5432/commentsdb?sslmode=disable&application_name=comment-project
+      - COMMENT_BASE_PATH=http://host.docker.internal:3001
+    depends_on:
+       db:
+        condition: service_healthy
+    links:
+      - "db:database" 
+  # killgrave:
+  #   image: friendsofgo/killgrave
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./testdata:/home
+  #   working_dir: /home  
+
+
+  
