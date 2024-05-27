@@ -7,16 +7,22 @@ import (
 )
 
 type Comment struct {
-	ID     string     `json:"id"`
-	Author string     `json:"author"`
-	Text   string     `json:"text"`
-	Time   time.Time  `json:"time"`
-	Childs []*Comment `json:"childs,omitempty"`
+	Author string    `json:"author"`
+	Text   string    `json:"text"`
+	Time   time.Time `json:"time"`
+}
+
+type CommentConnection struct {
+	ID       string   `json:"id"`
+	ParentID *string  `json:"parentId,omitempty"`
+	Level    int      `json:"level"`
+	Comment  *Comment `json:"comment"`
+	PostID   string   `json:"postId"`
 }
 
 type CommentsResult struct {
-	Comments []*Comment `json:"comments,omitempty"`
-	PageInfo *PageInfo  `json:"pageInfo"`
+	Comments []*CommentConnection `json:"comments,omitempty"`
+	PageInfo *PageInfo            `json:"pageInfo"`
 }
 
 type Mutation struct {
@@ -37,18 +43,17 @@ type NewPost struct {
 }
 
 type PageInfo struct {
-	StartCursor string `json:"startCursor"`
-	EndCursor   string `json:"endCursor"`
-	HasNextPage bool   `json:"hasNextPage"`
+	EndCursor *string `json:"endCursor,omitempty"`
 }
 
 type Post struct {
-	ID            string    `json:"id"`
-	Author        string    `json:"author"`
-	Title         string    `json:"title"`
-	Text          string    `json:"text"`
-	Time          time.Time `json:"time"`
-	IsCommentable *bool     `json:"isCommentable,omitempty"`
+	ID            string          `json:"id"`
+	Author        string          `json:"author"`
+	Title         string          `json:"title"`
+	Text          string          `json:"text"`
+	Time          time.Time       `json:"time"`
+	IsCommentable bool            `json:"isCommentable"`
+	Comments      *CommentsResult `json:"comments,omitempty"`
 }
 
 type Query struct {

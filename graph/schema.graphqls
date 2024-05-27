@@ -1,65 +1,69 @@
-
 type Post  {
-	id:         ID!
-	author:     String!
-	title:      String!
-	text:       String!
-	time: 	Time!
-	isCommentable: Boolean
+ 	id:         ID!
+ 	author:     String!
+ 	title:      String!
+ 	text:       String!
+ 	time:  Time!
+ 	isCommentable: Boolean!
+ 	comments: CommentsResult
+}
+
+type CommentConnection {
+ 	id: ID!
+ 	parentId: ID
+ 	level: Int!
+ 	comment: Comment!
+ 	postId: ID!
 }
 
 type Comment {
-	id: ID!
-	author:     String!
-	text:     String!
-	time: 	Time!
-	childs:  [Comment!]
+ 	author:     String!
+ 	text:     String!
+ 	time:  Time!
 }
 
 type CommentsResult {
-	comments: [Comment!]
-	pageInfo: PageInfo!
+ 	comments: [CommentConnection!]
+ 	pageInfo: PageInfo!
 }
 
 type ShortPost {
-	id: ID!
-	author: String!
-	title: String!
+ id: ID!
+ author: String!
+ title: String!
 }
 
 type PageInfo {
-    startCursor: ID!
-    endCursor: ID!
-    hasNextPage: Boolean!
+    endCursor: ID
 }
 
 input NewPost {
     author:     String!
-	title:      String!
-	text:       String!
-	time: 	Time!
-	isCommentable: Boolean
+ 	title:      String!
+ 	text:       String!
+ 	time:  Time!
+ 	isCommentable: Boolean
 }
 
 input NewComment {
-	author:     String!
-	text:     String!
-	time: 	Time!
+ 	author:     String!
+ 	text:     String!
+ 	time:  Time!
 }
 
 type Mutation {
     createPost(input: NewPost!): Post!
-    createComment(post: ID!, parentComment: ID! comment: NewComment!): Comment!
+    createComment(postId: ID!, parentComment: ID comment: NewComment!): ID!
 }
 
 type Query {
-  posts(count: Int, after: ID): [ShortPost!]
-	post(id: ID!): Post!
-	comments(postId: ID!, count: Int, after: ID): CommentsResult!
+   	posts(count: Int, after: ID): [ShortPost!]
+	post(postId: ID!, count: Int): Post!
+ 	comments(postId: ID!, count: Int, after: ID): CommentsResult!
 }
 
 type Subscription {
-    commentAdded(postId: ID!): Comment!
+    commentSubscribe(postId: ID!): CommentConnection!
 }
 
 scalar Time

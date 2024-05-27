@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/mi-raf/comment-project/graph"
+	"github.com/mi-raf/comment-project/internal/api"
+	"github.com/mi-raf/comment-project/internal/database"
+	"github.com/mi-raf/comment-project/internal/models"
+	"github.com/mi-raf/comment-project/internal/service"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/xlab/closer"
@@ -17,22 +20,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-var (
-	storage bool
-)
-
-func init() {
-	flag.BoolVar(&storage, "memory", false, "Save data in memory")
-}
-
 func main() {
-
-	flag.Parse()
-	if storage == true {
-		log.Info().Msg("save data in memory")
-	} else {
-		log.Info().Msg("save data in postgresql")
-	}
 
 	defer closer.Close()
 
@@ -63,11 +51,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Can't init app")
 	}
 	closer.Bind(cleanup)
-	closer.Bind(func() {
-		if err := a.Close(); err != nil {
-			log.Error().Err(err).Msg("Can't stop web application")
-		}
-	})
+	closer.Bind(a.Close)
 	if err := a.Start(); err != nil {
 		log.Fatal().Err(err).Msg("Can't start app")
 	}
@@ -91,20 +75,6 @@ func initLogger(c *config) error {
 	}
 	return nil
 }
-
-// func initHttpClientConfiguration(cfg *config) *swagger.Configuration {
-// 	return &swagger.Configuration{
-
-// 		BasePath:      cfg.CarApiBasePath,
-// 		DefaultHeader: make(map[string]string),
-// 	}
-// }
-
-// func initValidator() *validator.Validate {
-// 	validate := validator.New(validator.WithRequiredStructEnabled())
-// 	validate.RegisterValidation("c-year", internal.LessThanCurrYearValidator)
-// 	return validate
-// }
 
 func migrateData(cfg *config) (func(), error) {
 	log.Debug().Msg("start migrating data")
@@ -144,19 +114,18 @@ func migrateData(cfg *config) (func(), error) {
 	}, nil
 }
 
-func initPostgresConnection(ctx context.Context, cfg *config) (*pgxpool.Pool, func(), error) {
-	pg, err := pgxpool.New(ctx, cfg.DbAddr)
-	if err != nil {
-		return nil, nil, err
-	}
-	err = pg.Ping(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return pg, pg.Close, nil
+func initApiConfig(cfg *config, res *api.Resolver) *api.Config {
+	return &api.Config{Listen: cfg.Listen, GraphCfg: graph.Config{Resolvers: res}}
 }
 
-func initApiConfig(cfg *config) *api.Config {
-	return &api.Config{Addr: cfg.Listen}
+func initPostRepositoryConfig(cfg *config) *database.PostConfig {
+	return &database.PostConfig{InMemory: cfg.InMemory, DbAddr: cfg.DbAddr}
+}
+
+func initCommentRepositoryConfig(cfg *config, ch chan models.CommentDTO) *database.CommentConfig {
+	return &database.CommentConfig{InMemory: cfg.InMemory, DbAddr: cfg.DbAddr, CommentChan: ch}
+}
+
+func initServiceConfig(ch chan models.CommentDTO) *service.Config {
+	return &service.Config{CommentChan: ch}
 }

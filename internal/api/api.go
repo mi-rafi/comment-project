@@ -6,43 +6,86 @@ package api
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"strconv"
 
 	"github.com/mi-raf/comment-project/graph"
 	"github.com/mi-raf/comment-project/graph/model"
-	"github.com/mi-raf/comment-project/internal/service"
 	"github.com/rs/zerolog/log"
 )
 
+var ErrIdIncorrect = errors.New("incorrect tid format")
+
 // CreatePost is the resolver for the createPost field.
 func (r *mutationResolver) CreatePost(ctx context.Context, input model.NewPost) (*model.Post, error) {
-	return r.ps.
-	return nil, nil
+	return r.ps.CreatePost(ctx, input)
 }
 
 // CreateComment is the resolver for the createComment field.
-func (r *mutationResolver) CreateComment(ctx context.Context, post string, parentComment string, comment model.NewComment) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CreateComment - createComment"))
+func (r *mutationResolver) CreateComment(ctx context.Context, postID string, parentComment *string, comment model.NewComment) (string, error) {
+	p, err := getFromStr(postID)
+	if err != nil {
+		log.Error().Err(err).Msg("can not parse id")
+		return "", ErrIdIncorrect
+	}
+	id, err := r.ps.CreateComment(ctx, p, getFromNullableStr(parentComment), comment)
+	if err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(id, 10), nil
 }
 
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context, count *int, after *string) ([]*model.ShortPost, error) {
-	panic(fmt.Errorf("not implemented: Posts - posts"))
+	var c int
+	if count != nil {
+		c = *count
+	}
+
+	return r.ps.GetAllPosts(ctx, getFromNullableStr(after), c)
 }
 
 // Post is the resolver for the post field.
-func (r *queryResolver) Post(ctx context.Context, id string) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: Post - post"))
+func (r *queryResolver) Post(ctx context.Context, postID string, count *int) (*model.Post, error) {
+	p, err := getFromStr(postID)
+	if err != nil {
+		log.Error().Err(err).Msg("can not parse id")
+		return nil, ErrIdIncorrect
+	}
+
+	var c int
+	if count != nil {
+		c = *count
+	}
+	return r.ps.Post(ctx, p, c)
 }
 
 // Comments is the resolver for the comments field.
 func (r *queryResolver) Comments(ctx context.Context, postID string, count *int, after *string) (*model.CommentsResult, error) {
-	panic(fmt.Errorf("not implemented: Comments - comments"))
+	
+	p, err := getFromStr(postID)
+	if err != nil {
+		log.Error().Err(err).Msg("can not parse id")
+		return nil, ErrIdIncorrect
+	}
+	
+	var c int
+	if count != nil {
+		c = *count
+	}
+
+
+	return r.ps.Comments(ctx, p, c, getFromNullableStr(after))
 }
 
-// CommentAdded is the resolver for the commentAdded field.
-func (r *subscriptionResolver) CommentAdded(ctx context.Context, postID string) (<-chan *model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CommentAdded - commentAdded"))
+// CommentSubscribe is the resolver for the commentSubscribe field.
+func (r *subscriptionResolver) CommentSubscribe(ctx context.Context, postID string) (<-chan *model.CommentConnection, error) {
+	p, err := getFromStr(postID)
+	if err != nil {
+		log.Error().Err(err).Msg("can not parse id")
+		return nil, ErrIdIncorrect
+	}
+	return r.ps.CommentSubscribe(p), nil
 }
 
 // Mutation returns graph.MutationResolver implementation.
@@ -57,3 +100,25 @@ func (r *Resolver) Subscription() graph.SubscriptionResolver { return &subscript
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+
+func getFromNullableStr(data *string) int64 {
+	if data == nil {
+		return 0 
+	}
+	p, err := strconv.ParseInt(*data, 10, 64)
+	if err != nil {
+		log.Error().Err(err).Str("data", *data).Msg("can not parse id to int64")
+		return 0
+	}
+	return p
+}
+
+func getFromStr(data string) (int64, error) {
+	p, err := strconv.ParseInt(data, 10, 64)
+	if err != nil {
+		log.Error().Err(err).Str("data", data).Msg("can not parse id to int64")
+		return 0, err
+	}
+	return p, nil
+}
