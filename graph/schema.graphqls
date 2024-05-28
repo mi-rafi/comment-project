@@ -53,7 +53,7 @@ input NewComment {
 
 type Mutation {
     createPost(input: NewPost!): Post!
-    createComment(postId: ID!, parentComment: ID comment: NewComment!): ID!
+    createComment(postId: ID!, parentComment: ID, comment: NewComment!): ID!
 }
 
 type Query {

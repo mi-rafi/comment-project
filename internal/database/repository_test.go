@@ -106,46 +106,6 @@ func (s *PgPostRepositoryTestSuite) TestGetPostEmpty() {
 	s.Nil(actual)
 }
 
-func (s *PgPostRepositoryTestSuite) TestGetSmallPosts() {
-	// given
-	var expected []*models.PostDTO
-	for i := 0; i < 10; i++ {
-		var f models.PostDTO
-		gofakeit.Struct(&f)
-		id, err := s.r.Add(s.ctx, &f)
-		s.NoError(err)
-		f.Id = id
-		expected = append(expected, &f)
-	}
-
-	// when
-	actual, err := s.r.GetAll(s.ctx, 0, 10)
-
-	// then
-	s.NoError(err)
-	s.ElementsMatch(expected, actual)
-}
-
-func (s *PgPostRepositoryTestSuite) TestGetSmallPostsPagination() {
-	// given
-	var expected []*models.PostDTO
-	for i := 0; i < 10; i++ {
-		var f models.PostDTO
-		gofakeit.Struct(&f)
-		id, err := s.r.Add(s.ctx, &f)
-		s.NoError(err)
-		f.Id = id
-		expected = append(expected, &f)
-	}
-
-	// when
-	actual, err := s.r.GetAll(s.ctx, 0, 10)
-
-	// then
-	s.NoError(err)
-	s.ElementsMatch(expected, actual)
-}
-
 func (s *PgPostRepositoryTestSuite) TestGetSmallPostsPagination() {
 	// given
 	var expected []*models.PostDTO
@@ -236,7 +196,6 @@ func (s *PgCommentRepositoryTestSuite) TestCreateComment() {
 	f.PostId = s.getRandomPostId()
 
 	// when
-	log.Debug().Int64("post id", f.PostId).Msg("random post")
 	_, err := s.r.Add(s.ctx, &f)
 
 	// then
@@ -251,7 +210,6 @@ func (s *PgCommentRepositoryTestSuite) TestCreateCommentAndListen() {
 	f.PostId = s.getRandomPostId()
 
 	// when
-	log.Debug().Int64("post id", f.PostId).Msg("random post")
 	_, err := s.r.Add(s.ctx, &f)
 
 	// then

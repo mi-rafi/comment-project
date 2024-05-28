@@ -95,11 +95,11 @@ func (s *ServiceTestSuite) TestGetPost() {
 	gofakeit.Struct(&f)
 	s.pr.On("Get", s.ctx, int64(1)).Return(&f, nil)
 
-	var testComments []models.CommentDTO
+	var testComments []*models.CommentDTO
 	for i := 0; i < 5; i++ {
 		var f models.CommentDTO
 		gofakeit.Struct(&f)
-		testComments = append(testComments, f)
+		testComments = append(testComments, &f)
 	}
 	s.cr.On("GetAllOfPost", s.ctx, int64(1), int64(0), 5).Return(testComments, nil)
 
@@ -270,11 +270,11 @@ func (s *ServiceTestSuite) TestSubsribeToExistingAndListen() {
 
 func (s *ServiceTestSuite) TestGetComments() {
 	// given
-	var testComments []models.CommentDTO
+	var testComments []*models.CommentDTO
 	for i := 0; i < 5; i++ {
 		var f models.CommentDTO
 		gofakeit.Struct(&f)
-		testComments = append(testComments, f)
+		testComments = append(testComments, &f)
 	}
 	s.cr.On("GetAllOfPost", s.ctx, int64(1), int64(0), 5).Return(testComments, nil)
 
@@ -338,7 +338,7 @@ func (s *ServiceTestSuite) TestGetCommentsWithIncorrectOffset() {
 
 func (s *ServiceTestSuite) TestGetCommentsEmptyResult() {
 	// given
-	var testComments []models.CommentDTO
+	var testComments []*models.CommentDTO
 	s.cr.On("GetAllOfPost", s.ctx, mock.Anything, mock.Anything, mock.Anything).Return(testComments, nil)
 
 	// when
@@ -454,7 +454,7 @@ func (p *MockPostRepository) IsCommentable(ctx context.Context, id int64) (bool,
 	return args.Bool(0), args.Error(1)
 }
 
-func (p *MockCommentRepository) Add(ctx context.Context, c models.CommentDTO) (int64, error) {
+func (p *MockCommentRepository) Add(ctx context.Context, c *models.CommentDTO) (int64, error) {
 	args := p.Called(ctx, c)
 	cc <- models.CommentDTO{
 		Id:       int64(args.Int(0)),
@@ -470,7 +470,7 @@ func (p *MockCommentRepository) Add(ctx context.Context, c models.CommentDTO) (i
 
 func (p *MockCommentRepository) GetAllOfPost(ctx context.Context, idPost int64, offset int64, limit int) ([]*models.CommentDTO, error) {
 	args := p.Called(ctx, idPost, offset, limit)
-	return args.Get(0).([]models.CommentDTO), args.Error(1)
+	return args.Get(0).([]*models.CommentDTO), args.Error(1)
 }
 func (p *MockCommentRepository) Get(ctx context.Context, id int64) (models.CommentDTO, error) {
 	args := p.Called(ctx, id)

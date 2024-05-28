@@ -155,7 +155,7 @@ func (ps *PostService) CreateComment(ctx context.Context, postId int64, pc int64
 		log.Debug().Int64("post id", postId).Msg("post is not commentable")
 		return 0, fmt.Errorf("can not comment post: %d", postId)
 	}
-	id, err := ps.c.Add(ctx, models.CommentDTO{PostId: postId, ParentId: pc, Author: comment.Author, Text: comment.Text, Time: comment.Time})
+	id, err := ps.c.Add(ctx, &models.CommentDTO{PostId: postId, ParentId: pc, Author: comment.Author, Text: comment.Text, Time: comment.Time})
 	if err != nil {
 		log.Error().Err(err).Int64("post id", postId).Str("author", comment.Author).Str("text", comment.Text).Msg("error while saving comment info")
 		return 0, ErrDatabase

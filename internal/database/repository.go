@@ -78,7 +78,7 @@ type (
 
 	CommentRepository interface {
 		Add(ctx context.Context, c *mod.CommentDTO) (int64, error)
-		GetAllOfPost(ctx context.Context, idPost int64, offset int64, limit int32) ([]*mod.CommentDTO, error)
+		GetAllOfPost(ctx context.Context, idPost int64, offset int64, limit int) ([]*mod.CommentDTO, error)
 	}
 
 	PostConfig struct {
@@ -412,7 +412,7 @@ func searchIndex(data []*mod.CommentDTO, id int64) (int, bool) {
 	return -1, false
 }
 
-func (r *InMemoryCommentRepository) GetAllOfPost(ctx context.Context, idPost, offset int64, limit int32) ([]*mod.CommentDTO, error) {
+func (r *InMemoryCommentRepository) GetAllOfPost(ctx context.Context, idPost, offset int64, limit int) ([]*mod.CommentDTO, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	comments, ok := r.c[idPost]
